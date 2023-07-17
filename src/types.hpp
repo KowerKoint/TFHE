@@ -78,17 +78,17 @@ public:
         }
         constexpr Reference operator&=(bool b) {
             bool nb = container.get(idx) & b;
-            container.set(nb);
+            container.set(idx, nb);
             return *this;
         }
         constexpr Reference operator|=(bool b) {
             bool nb = container.get(idx) | b;
-            container.set(nb);
+            container.set(idx, nb);
             return *this;
         }
         constexpr Reference operator^=(bool b) {
             bool nb = container.get(idx) ^ b;
-            container.set(nb);
+            container.set(idx, nb);
             return *this;
         }
     };
@@ -104,7 +104,7 @@ public:
     }
 
     constexpr bool get(int idx) const {
-        return (_val[idx >> 6] >> (idx & 0x3f));
+        return (_val[idx >> 6] >> (idx & 0x3f) & 1);
     }
     constexpr void set(int idx, bool b) {
         if (b) {
