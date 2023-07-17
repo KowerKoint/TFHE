@@ -3,6 +3,7 @@
 
 namespace TFHE {
 struct TorusValue {
+    constexpr static uint32_t mu = 1U << 29;  // 1/8
     uint32_t val;
 
     TorusValue(double d) {
@@ -13,10 +14,11 @@ struct TorusValue {
     }
 
     TorusValue(bool b) {
-        if (b)
-            val = 1U << 29;
-        else
-            val = -(1U << 29);
+        if (b) {
+            val = mu;
+        } else {
+            val = -mu;
+        }
     }
 
     operator double() const {
