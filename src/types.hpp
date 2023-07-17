@@ -14,7 +14,7 @@ public:
     constexpr TorusValue(uint32_t u) : _val(u) {}
     TorusValue(double d) : _val(0.) {
         d = fmod(d, 1.);
-        if (d < 0.) d = 1. - d;
+        if (d < 0.) d += 1.;
         d *= (1LL << 32);
         _val = d;
     }
