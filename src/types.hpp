@@ -52,7 +52,7 @@ public:
     }
 
     constexpr TorusValue& operator*=(const TorusValue& rhs) {
-        _val = __uint128_t(_val) * rhs._val >> 64;
+        _val = uint64_t(_val) * rhs._val >> 32;
         return *this;
     }
     constexpr TorusValue operator*(const TorusValue& rhs) const {
