@@ -185,12 +185,6 @@ public:
     }
 };
 
-template <int N1, int N2>
-constexpr BitVector<N1 + N2> connect_vector(
-    const BitVector<N1>& a, const BitVector<N2>& b) {
-    static_assert("not implemented!");
-}
-
 template <int N>
 constexpr TorusVector<N + 1> concat_ba(
     const TorusValue& b, const TorusVector<N>& a) {
