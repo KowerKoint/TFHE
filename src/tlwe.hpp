@@ -21,7 +21,7 @@ class TLWE {
         }
         return a;
     }
-    TorusValue generate_e() { return random.uniform_real() * ALPHA; }
+    TorusValue generate_e() { return random.normal() * ALPHA; }
 
 public:
     TLWE() : random{} {}
