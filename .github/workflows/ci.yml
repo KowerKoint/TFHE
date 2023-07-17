@@ -24,11 +24,11 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-20.04
-      steps:
-        - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-        - name: Build test
-          run: g++ test/main.cpp -I src/ -o test/main
-        
-        - name: Run test
-          run: test/main
+      - name: Build test
+        run: g++ test/main.cpp -I src/ -o test/main
+      
+      - name: Run test
+        run: test/main
