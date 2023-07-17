@@ -7,29 +7,28 @@ on:
 jobs:
   format-test:
     name: Format
-      runs-on: "ubuntu-20.04"
-      steps:
-        - uses: actions/checkout@v3
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
 
-        - name: Install clang-format
-          run: sudo apt install clang-format
-        
-        - name: Format
-          run:
-            find ./src ./test -regex '.*\.hpp' -exec clang-format -style=file -i {} \;
-        
-        - name: Compare
-          run: test -z "$(git diff)"
+      - name: Install clang-format
+        run: sudo apt install clang-format
+      
+      - name: Format
+        run:
+          find ./src ./test -regex '.*\.hpp' -exec clang-format -style=file -i {} \;
+      
+      - name: Compare
+        run: test -z "$(git diff)"
   
   test:
     name: Test
-      runs-on: "ubuntu-20.04"
-        steps:
-          - uses: actions/checkout@v3
+    runs-on: ubuntu-20.04
+      steps:
+        - uses: actions/checkout@v3
 
-          - name: Build test
-            run: g++ test/main.cpp -I src/ -o test/main
-          
-          - name: Run test
-            run: test/main
-            
+        - name: Build test
+          run: g++ test/main.cpp -I src/ -o test/main
+        
+        - name: Run test
+          run: test/main
