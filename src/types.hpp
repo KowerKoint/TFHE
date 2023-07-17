@@ -185,22 +185,4 @@ public:
     }
 };
 
-template <int N>
-constexpr TorusVector<N + 1> concat_ba(
-    const TorusValue& b, const TorusVector<N>& a) {
-    TorusVector<N + 1> ba;
-    ba[0] = b;
-    for (int i = 0; i < N; i++) ba[1 + i] = a[i];
-    return ba;
-}
-
-template <int N>
-constexpr std::pair<TorusValue, TorusVector<N>> decompose_ba(
-    const TorusVector<N + 1>& ba) {
-    TorusValue b = ba[0];
-    TorusVector<N> a;
-    for (int i = 0; i < N; i++) a[i] = ba[1 + i];
-    return std::make_pair(b, a);
-}
-
 }  // namespace TFHE

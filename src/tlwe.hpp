@@ -23,6 +23,24 @@ class TLWE {
     }
     TorusValue generate_e() { return random.normal() * ALPHA; }
 
+    template <int N>
+    constexpr static TorusVector<N + 1> concat_ba(
+        const TorusValue& b, const TorusVector<N>& a) {
+        TorusVector<N + 1> ba;
+        ba[0] = b;
+        for (int i = 0; i < N; i++) ba[1 + i] = a[i];
+        return ba;
+    }
+
+    template <int N>
+    constexpr static std::pair<TorusValue, TorusVector<N>> decompose_ba(
+        const TorusVector<N + 1>& ba) {
+        TorusValue b = ba[0];
+        TorusVector<N> a;
+        for (int i = 0; i < N; i++) a[i] = ba[1 + i];
+        return std::make_pair(b, a);
+    }
+
 public:
     TLWE() : random{} {}
 
