@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Build test
-        run: g++ test/main.cpp -I src/ -o test/main
+        run: g++ -std=gnu++17 test/main.cpp -I src/ -o test/main
       
       - name: Run test
         run: test/main

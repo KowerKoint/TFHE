@@ -4,7 +4,7 @@
 #include "tlwe.hpp"
 
 void test_TLWE() {
-    TFHE::TLWE tlwe;
+    TFHE::TLWE<> tlwe;
     std::mt19937 mt(0);
     for (int i = 0; i < 100; i++) {
         auto s = tlwe.generate_s();
