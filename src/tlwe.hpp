@@ -8,11 +8,17 @@
 #include "types.hpp"
 
 namespace TFHE {
-class TLWE {
-    constexpr static int N = 636;
-    constexpr static double ALPHA = 0.0000925119974676756;
 
+struct TLWEParameter128BitSecurity {
+    constexpr static int N = 636;
+    constexpr static int ALPHA = 0.0000925119974676756;
+};
+
+template <typename TLWEParameter = TLWEParameter128BitSecurity>
+class TLWE {
     Random random;
+    constexpr static int N = TLWEParameter::N;
+    constexpr static double ALPHA = TLWEParameter::ALPHA;
 
     TorusVector<N> generate_a() {
         TorusVector<N> a;
