@@ -51,11 +51,11 @@ public:
         return TorusValue(*this) -= rhs;
     }
 
-    constexpr TorusValue& operator*=(const TorusValue& rhs) {
-        _val = uint64_t(_val) * rhs._val >> 32;
+    constexpr TorusValue& operator*=(bool rhs) {
+        if (!rhs) _val = 0;
         return *this;
     }
-    constexpr TorusValue operator*(const TorusValue& rhs) const {
+    constexpr TorusValue operator*(bool rhs) const {
         return TorusValue(*this) *= rhs;
     }
 };
@@ -171,11 +171,6 @@ public:
         return TorusVector(*this) -= rhs;
     }
 
-    constexpr TorusValue dot(const TorusVector& rhs) const {
-        TorusValue ret = 0.;
-        for (int i = 0; i < N; i++) ret += _val[i] * rhs[i];
-        return ret;
-    }
     constexpr TorusValue dot(const BitVector<N>& rhs) const {
         TorusValue ret = 0.;
         for (int i = 0; i < N; i++) {
