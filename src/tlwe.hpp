@@ -16,33 +16,34 @@ struct TLWEParameter128BitSecurity {
 
 template <typename TLWEParameter = TLWEParameter128BitSecurity>
 class TLWE {
-    Random random;
+public:
     constexpr static int N = TLWEParameter::N;
     constexpr static double ALPHA = TLWEParameter::ALPHA;
 
-    TorusVector<N> generate_a() {
-        TorusVector<N> a;
-        for (auto& ai : a) {
-            ai = random.uniform_torus();
-        }
+private:
+    Random random;
+    Vector<TorusValue, N> generate_a() {
+        Vector<TorusValue, N> a;
+        std::generate(
+            a.begin(), a.end(), [this] { return random.uniform_torus(); });
         return a;
     }
     TorusValue generate_e() { return random.normal() * ALPHA; }
 
     template <int N>
-    constexpr static TorusVector<N + 1> concat_ba(
-        const TorusValue& b, const TorusVector<N>& a) {
-        TorusVector<N + 1> ba;
+    constexpr static Vector<TorusValue, N + 1> concat_ba(
+        const TorusValue& b, const Vector<TorusValue, N>& a) {
+        Vector<TorusValue, N + 1> ba;
         ba[0] = b;
         for (int i = 0; i < N; i++) ba[1 + i] = a[i];
         return ba;
     }
 
     template <int N>
-    constexpr static std::pair<TorusValue, TorusVector<N>> decompose_ba(
-        const TorusVector<N + 1>& ba) {
+    constexpr static std::pair<TorusValue, Vector<TorusValue, N>> decompose_ba(
+        const Vector<TorusValue, N + 1>& ba) {
         TorusValue b = ba[0];
-        TorusVector<N> a;
+        Vector<TorusValue, N> a;
         for (int i = 0; i < N; i++) a[i] = ba[1 + i];
         return std::make_pair(b, a);
     }
@@ -50,20 +51,19 @@ class TLWE {
 public:
     TLWE() : random{} {}
 
-    BitVector<N> generate_s() { return random.bit_vector<N>(); }
+    Vector<bool, N> generate_s() { return random.bit_vector<N>(); }
 
-    TorusVector<N + 1> encrypt_single_binary(bool m, const BitVector<N>& s) {
-        TorusVector<N> a = generate_a();
+    Vector<TorusValue, N + 1> encrypt_single_binary(
+        bool m, const Vector<bool, N>& s) {
+        Vector<TorusValue, N> a = generate_a();
         TorusValue e = generate_e();
         TorusValue b = a.dot(s) + TorusValue(m) + e;
         return concat_ba(b, a);
     }
 
     bool decrypt_single_binary(
-        const TorusVector<N + 1>& ba, const BitVector<N>& s) {
-        TorusValue b;
-        TorusVector<N> a;
-        std::tie(b, a) = decompose_ba<N>(ba);
+        const Vector<TorusValue, N + 1>& ba, const Vector<bool, N>& s) {
+        auto [b, a] = decompose_ba<N>(ba);
         return b - a.dot(s);
     }
 };
