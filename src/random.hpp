@@ -14,12 +14,14 @@ class Random {
     std::uniform_int_distribution<uint64_t> uniform_int_dist_64;
 
     template <int N>
-    std::array<uint64_t, (N + 63) / 64> _bit_array() {
+    std::array<bool, N> _bit_array() {
         constexpr int M = (N + 63) / 64;
-        std::array<uint64_t, M> ret_array;
-        std::generate(ret_array.begin(), ret_array.end(),
+        std::array<uint64_t, M> ret_bits;
+        std::generate(ret_bits.begin(), ret_bits.end(),
             [this] { return uniform_int_dist_64(rd); });
-        return ret_array;
+        std::array<bool, N> ret;
+        for (int i = 0; i < N; i++) ret[i] = ret_bits[i >> 6] >> (i & 0x3F) & 1;
+        return ret;
     }
 
 public:
