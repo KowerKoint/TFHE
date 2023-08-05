@@ -89,5 +89,20 @@ public:
             [](const TorusValue& val) { return (bool)val; });
         return ans;
     }
+
+    Vector<TorusValue, N * K + 1> sample_extract_index(
+        const Vector<Polynomial<TorusValue, N>, K + 1>& ba_lv1, int x) {
+        Vector<TorusValue, N * K + 1> ba_lv0;
+        ba_lv0[0] = ba_lv1[0][x];
+        for (int j = 0; j < K; j++) {
+            for (int i = 0; i <= x; i++) {
+                ba_lv0[1 + j * N + i] = ba_lv1[1 + j][x - i];
+            }
+            for (int i = x + 1; i < N; i++) {
+                ba_lv0[1 + j * N + i] = -ba_lv1[1 + j][n + x - i];
+            }
+        }
+        return ba_lv0;
+    }
 };
 }  // namespace TFHE
