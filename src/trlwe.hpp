@@ -91,18 +91,18 @@ public:
     }
 
     Vector<TorusValue, N * K + 1> sample_extract_index(
-        const Vector<Polynomial<TorusValue, N>, K + 1>& ba_lv1, int x) {
-        Vector<TorusValue, N * K + 1> ba_lv0;
-        ba_lv0[0] = ba_lv1[0][x];
+        const Vector<Polynomial<TorusValue, N>, K + 1>& trlwe_ba, int x) {
+        Vector<TorusValue, N * K + 1> tlwe_lv1_ba;
+        tlwe_lv1_ba[0] = trlwe_ba[0][1];
         for (int j = 0; j < K; j++) {
             for (int i = 0; i <= x; i++) {
-                ba_lv0[1 + j * N + i] = ba_lv1[1 + j][x - i];
+                tlwe_lv1_ba[1 + j * N + i] = trlwe_ba[1 + j][x - i];
             }
             for (int i = x + 1; i < N; i++) {
-                ba_lv0[1 + j * N + i] = -ba_lv1[1 + j][n + x - i];
+                tlwe_lv1_ba[1 + j * N + i] = -trlwe_ba[1 + j][N + x - i];
             }
         }
-        return ba_lv0;
+        return tlwe_lv1_ba;
     }
 };
 }  // namespace TFHE
