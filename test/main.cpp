@@ -44,8 +44,8 @@ void test_CMUX() {
         for (int j = 0; j < 2; j++) {
             std::generate(
                 msgs[j].begin(), msgs[j].end(), [&mt] { return mt() & 1; });
-            /* msgs_encrypted[j] = */
-            /* std::move(trlwe.encrypt_binary_polynomial(msgs[j], s)); */
+            msgs_encrypted[j] =
+                std::move(trlwe.encrypt_binary_polynomial(msgs[j], s));
         }
         int answer = mt() & 1;
         TFHE::Polynomial<bool, N> answer_poly;

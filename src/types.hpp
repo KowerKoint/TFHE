@@ -237,6 +237,15 @@ public:
     constexpr Vector(const std::array<Value, N>& val) : Base{val} {}
     constexpr Vector(std::array<Value, N>&& val) : Base{std::move(val)} {}
 
+    constexpr Vector& operator=(const Vector& rhs) {
+        this->_val = rhs._val;
+        return *this;
+    }
+    constexpr Vector& operator=(Vector&& rhs) {
+        this->_val = std::move(rhs._val);
+        return *this;
+    }
+
     template <typename RHSValue>
     constexpr decltype(std::declval<Value&>() * std::declval<RHSValue&>()) dot(
         const Vector<RHSValue, N>& rhs) const {
