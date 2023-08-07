@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <iostream>
 
@@ -30,8 +32,8 @@ private:
     }
     Polynomial<TorusValue, N> generate_e() {
         Polynomial<TorusValue, N> e;
-        std::generate(
-            e.begin(), e.end(), [this] { return random.normal() * ALPHA; });
+        std::generate(e.begin(), e.end(),
+            [this] { return TorusValue{random.normal() * ALPHA}; });
         return e;
     }
 
@@ -80,7 +82,7 @@ public:
 
     Polynomial<bool, N> decrypt_binary_polynomial(
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba,
-        const Vector<Polynomial<bool, N>, K>& s) {
+        const Vector<Polynomial<bool, N>, K>& s) const {
         auto [b, a] = decompose_ba<N>(ba);
         auto tmp = b - a.dot(s);
         auto torus_vector = b - a.dot(s);
@@ -91,7 +93,7 @@ public:
     }
 
     Vector<TorusValue, N * K + 1> sample_extract_index(
-        const Vector<Polynomial<TorusValue, N>, K + 1>& trlwe_ba, int x) {
+        const Vector<Polynomial<TorusValue, N>, K + 1>& trlwe_ba, int x) const {
         Vector<TorusValue, N * K + 1> tlwe_lv1_ba;
         tlwe_lv1_ba[0] = trlwe_ba[0][1];
         for (int j = 0; j < K; j++) {

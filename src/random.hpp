@@ -36,7 +36,9 @@ public:
 
     double uniform_real() { return uniform_real_dist(rd); }
 
-    TorusValue uniform_torus() { return uniform_int_dist_32(rd); }
+    TorusValue uniform_torus() {
+        return TorusValue::from_raw_value(uniform_int_dist_32(rd));
+    }
 
     template <int N>
     Polynomial<bool, N> bit_polynomial() {

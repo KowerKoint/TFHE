@@ -28,7 +28,7 @@ private:
             a.begin(), a.end(), [this] { return random.uniform_torus(); });
         return a;
     }
-    TorusValue generate_e() { return random.normal() * ALPHA; }
+    TorusValue generate_e() { return TorusValue{random.normal() * ALPHA}; }
 
     template <int N>
     constexpr static Vector<TorusValue, N + 1> concat_ba(
@@ -64,7 +64,7 @@ public:
     bool decrypt_single_binary(
         const Vector<TorusValue, N + 1>& ba, const Vector<bool, N>& s) {
         auto [b, a] = decompose_ba<N>(ba);
-        return b - a.dot(s);
+        return (bool)(b - a.dot(s));
     }
 };
 }  // namespace TFHE
