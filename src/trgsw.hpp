@@ -94,7 +94,7 @@ public:
         for (int i = 0; i < K + 1; i++) {
             Vector<Polynomial<Int, N>, L> decomposed = decomposition(ba[i]);
             std::copy(decomposed.begin(), decomposed.end(),
-                decomposed_ba.begin() + i * (K + 1));
+                decomposed_ba.begin() + i * L);
         }
         return decomposed_ba * c;
     }
