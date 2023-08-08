@@ -26,19 +26,19 @@ private:
     Vector<Polynomial<Int, N>, L> decomposition(
         const Polynomial<TorusValue, N>& a) {
         constexpr uint32_t round_offset =
-            1 << (32 - L * BG_BIT - 1);  // bg^(-l)/2 四捨五入のために足す
+            1U << (32 - L * BG_BIT - 1);  // bg^(-l)/2 四捨五入のために足す
         Vector<Polynomial<int, N>, L> a_hat;
         for (int i = 0; i < L; i++) {
             for (int j = 0; j < N; j++) {
                 a_hat[i][j] = (a[j].get_raw_value() + round_offset) >>
                                   (32 - BG_BIT * (i + 1)) &
-                              ((1 << BG_BIT) - 1);
+                              ((1U << BG_BIT) - 1);
             }
         }
         Vector<Polynomial<Int, N>, L> a_bar;
         for (int i = L - 1; i >= 0; i--) {
             for (int j = 0; j < N; j++) {
-                if (a_hat[i][j] >= (1 << (BG_BIT - 1))) {
+                if (a_hat[i][j] >= (1U << (BG_BIT - 1))) {
                     a_bar[i][j] = a_hat[i][j] - (1 << BG_BIT);
                     if (i) a_hat[i - 1][j]++;
                 } else {
@@ -105,7 +105,15 @@ public:
         const Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>& c,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_0,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_1) {
-        return external_product(c, ba_1 - ba_0) + ba_0;
+        Vector<Polynomial<TorusValue, N>, K + 1> ret =
+            external_product(c, ba_1 - ba_0) + ba_0;
+        /* for (int i = 0; i < K + 1; i++) { */
+        /*     for (int j = 0; j < N; j++) { */
+        /*         std::cout << ' ' << (double)ret[i][j]; */
+        /*     } */
+        /*     std::cout << std::endl; */
+        /* } */
+        return ret;
     }
 
     template <int TLWE_N>
@@ -146,6 +154,12 @@ public:
                 cmux(bk[i], ret, rotated);  // s==1のときret←ret*x^(a_2n)
             ret = selected;
         }
+        /* for (int i = 0; i < K + 1; i++) { */
+        /*     for (int j = 0; j < N; j++) { */
+        /*         std::cout << ' ' << (double)ret[i][j]; */
+        /*     } */
+        /*     std::cout << std::endl; */
+        /* } */
         return ret;
     }
 

@@ -42,12 +42,12 @@ public:
 
     template <int N>
     Polynomial<bool, N> bit_polynomial() {
-        return Polynomial<bool, N>{std::move(_bit_array<N>())};
+        return Polynomial<bool, N>{_bit_array<N>()};
     }
 
     template <int N>
     Vector<bool, N> bit_vector() {
-        return Vector<bool, N>{std::move(_bit_array<N>())};
+        return Vector<bool, N>{_bit_array<N>()};
     }
 };
 }  // namespace TFHE

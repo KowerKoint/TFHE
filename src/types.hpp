@@ -2,9 +2,11 @@
 
 #include <cmath>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 
 namespace TFHE {
+int p = 0;
 template <int N>
 struct is_valid_int_bits {
     constexpr static bool value = N == 8 || N == 16 || N == 32;
@@ -137,17 +139,17 @@ public:
         for (int i = 0; i < N; i++) ret[i] = -_val[i];
         return ret;
     }
-    constexpr VectorOrPolynomial operator+=(const VectorOrPolynomial& rhs) {
+    constexpr VectorOrPolynomial& operator+=(const VectorOrPolynomial& rhs) {
         for (int i = 0; i < N; i++) _val[i] += rhs[i];
-        return VectorOrPolynomial(_val);
+        return *(static_cast<VectorOrPolynomial*>(this));
     }
     constexpr VectorOrPolynomial operator+(
         const VectorOrPolynomial& rhs) const {
         return VectorOrPolynomial(_val) += rhs;
     }
-    constexpr VectorOrPolynomial operator-=(const VectorOrPolynomial& rhs) {
+    constexpr VectorOrPolynomial& operator-=(const VectorOrPolynomial& rhs) {
         for (int i = 0; i < N; i++) _val[i] -= rhs[i];
-        return VectorOrPolynomial(_val);
+        return *(static_cast<VectorOrPolynomial*>(this));
     }
     constexpr VectorOrPolynomial operator-(
         const VectorOrPolynomial& rhs) const {
@@ -183,7 +185,7 @@ public:
         return *this;
     }
     constexpr Polynomial& operator=(Polynomial&& rhs) {
-        this->_val = std::move(rhs._val);
+        if (this != &rhs) this->_val = std::move(rhs._val);
         return *this;
     }
 
@@ -256,7 +258,7 @@ public:
         return *this;
     }
     constexpr Vector& operator=(Vector&& rhs) {
-        this->_val = std::move(rhs._val);
+        if (this != &rhs) this->_val = std::move(rhs._val);
         return *this;
     }
 
@@ -287,10 +289,21 @@ class Matrix {
 
 public:
     constexpr Matrix() : _val{} {}
+    constexpr Matrix(const Matrix& v) : _val{v._val} {}
+    constexpr Matrix(Matrix&& v) : _val{std::move(v._val)} {}
     constexpr Matrix(const std::array<std::array<Value, N>, M>& val)
         : _val{val} {}
     constexpr Matrix(std::array<std::array<Value, N>, M>&& val)
         : _val{std::move(val)} {}
+
+    constexpr Matrix& operator=(const Matrix& rhs) {
+        this->_val = rhs._val;
+        return *this;
+    }
+    constexpr Matrix& operator=(Matrix&& rhs) {
+        if (this != &rhs) this->_val = std::move(rhs._val);
+        return *this;
+    }
 
     using Iterator = typename std::array<std::array<Value, N>, M>::iterator;
     using ConstIterator =
@@ -373,10 +386,33 @@ public:
         using Result =
             decltype(std::declval<LHSValue>() * std::declval<Value>());
         const Vector<Result, N> ret;
+        std::cout << "=====\n";
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < N; j++) {
-                ret[j] += lhs[i] * rhs[i][j];
+                std::cout << "-----\n";
+                for (int k = 0; k < 512; k++) {
+                    std::cout << ' ' << (double)ret[j][k];
+                }
+                std::cout << "\n+\n";
+                auto tmp = lhs[i] * rhs[i][j];
+                for (int k = 0; k < 512; k++) {
+                    std::cout << ' ' << (double)tmp[k];
+                }
+                std::cout << "\n=\n";
+                ret[j] = ret[j] + tmp;  // auto tmp2 = ret[j] + tmp; ret[j] =
+                                        // tmp2; にすると何故か通る
+                for (int k = 0; k < 512; k++) {
+                    std::cout << ' ' << (double)ret[j][k];
+                }
+                std::cout << std::endl;
             }
+        }
+        std::cout << "*****\n";
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < 512; j++) {
+                std::cout << ' ' << (double)ret[i][j];
+            }
+            std::cout << std::endl;
         }
         return ret;
     }
