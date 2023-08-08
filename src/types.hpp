@@ -261,10 +261,10 @@ public:
     }
 
     template <typename RHSValue>
-    constexpr decltype(std::declval<Value&>() * std::declval<RHSValue&>()) dot(
+    constexpr decltype(std::declval<Value>() * std::declval<RHSValue>()) dot(
         const Vector<RHSValue, N>& rhs) const {
         using Result =
-            decltype(std::declval<Value&>() * std::declval<RHSValue&>());
+            decltype(std::declval<Value>() * std::declval<RHSValue>());
         Result ret{};
         for (int i = 0; i < N; i++) {
             ret += (*this)[i] * rhs[i];

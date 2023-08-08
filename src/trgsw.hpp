@@ -122,14 +122,6 @@ public:
         constexpr int N_bit = get_log_2(N);
         static_assert((1 << N_bit) == N);  // N = 2^N_bit
 
-        std::cout << "===Blind Rotate start===\n";
-        std::cout << "test_vector:\n";
-        for (int i = 0; i < K + 1; i++) {
-            for (int j = 0; j < N; j++) {
-                std::cout << (double)test_vector[i][j]
-                          << (j == N - 1 ? ' ' : '\n');
-            }
-        }
         auto trlwe_multiply_x_exp =
             [](const Vector<Polynomial<TorusValue, N>, K + 1>& trlwe, int n) {
                 // trlweにX^nを乗算
@@ -146,17 +138,13 @@ public:
             trlwe_multiply_x_exp(test_vector, -b_2n);
         for (int i = 0; i < TLWE_N; i++) {
             int a_2n = (tlwe_lv0[1 + i].get_raw_value() +
-                           (1 << (32 - (N_bit + 1) - 1))) >>
+                           (1U << (32 - (N_bit + 1) - 1))) >>
                        (32 - (N_bit + 1));  // round(a_i * 2N)
             Vector<Polynomial<TorusValue, N>, K + 1> rotated =
                 trlwe_multiply_x_exp(ret, a_2n);
-            ret = cmux(bk[i], ret, rotated);  // s==1のときret←ret*x^(a_2n)
-        }
-        std::cout << "ret:\n";
-        for (int i = 0; i < K + 1; i++) {
-            for (int j = 0; j < N; j++) {
-                std::cout << (double)ret[i][j] << (j == N - 1 ? ' ' : '\n');
-            }
+            Vector<Polynomial<TorusValue, N>, K + 1> selected =
+                cmux(bk[i], ret, rotated);  // s==1のときret←ret*x^(a_2n)
+            ret = selected;
         }
         return ret;
     }
