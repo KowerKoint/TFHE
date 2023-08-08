@@ -85,7 +85,7 @@ public:
     template <int Bits, std::enable_if_t<!is_valid_int_bits_v<Bits>>* = nullptr>
     friend constexpr TorusValue operator*(
         SignedInt<Bits> lhs, const TorusValue& rhs) {
-        return TorusValue::from_raw_value(lhs * rhs._val);
+        return TorusValue::from_raw_value(rhs._val * lhs);
     }
 
     constexpr bool operator==(const TorusValue& rhs) const {
@@ -102,7 +102,7 @@ protected:
     std::array<Value, N> _val;
 
 public:
-    _VectorOrPolynomial() = default;
+    constexpr _VectorOrPolynomial() : _val{{}} {}
     constexpr _VectorOrPolynomial(const std::array<Value, N>& val)
         : _val{val} {}
     constexpr _VectorOrPolynomial(std::array<Value, N>&& val)
@@ -172,7 +172,7 @@ class Polynomial : public _VectorOrPolynomial<Value, N, Polynomial<Value, N>> {
     friend Base;
 
 public:
-    Polynomial() = default;
+    constexpr Polynomial() : Base() {}
     constexpr Polynomial(const Polynomial& p) : Base(p._val){};
     constexpr Polynomial(Polynomial&& p) : Base(std::move(p._val)){};
     constexpr Polynomial(const std::array<Value, N>& val) : Base{val} {}
@@ -187,7 +187,7 @@ public:
         return *this;
     }
 
-    template <typename RHSValue, typename FAKE = void>
+    template <typename RHSValue>
     constexpr Polynomial& operator*=(const Polynomial<RHSValue, N>& rhs) {
         std::array<Value, N> ret;
         for (int i = 0; i < N; i++) {
@@ -218,6 +218,20 @@ public:
         }
         return ret;
     }
+    constexpr Polynomial multiply_x_exp(int n) const {
+        n %= N * 2;
+        if (n < 0) n += N * 2;
+        Polynomial ret;
+        for (int i = 0; i < N; i++) {
+            if (i + n >= N * 2)
+                ret[i + n - N * 2] = (*this)[i];
+            else if (i + n >= N)
+                ret[i + n - N] = -(*this)[i];
+            else
+                ret[i + n] = (*this)[i];
+        }
+        return ret;
+    }
 };
 
 template <typename Value, int M, int N>
@@ -231,7 +245,7 @@ class Vector : public _VectorOrPolynomial<Value, N, Vector<Value, N>> {
     friend Matrix<Value, N, N>;
 
 public:
-    Vector() = default;
+    constexpr Vector() : Base{} {}
     constexpr Vector(const Vector& v) : Base{v._val} {}
     constexpr Vector(Vector&& v) : Base{std::move(v._val)} {}
     constexpr Vector(const std::array<Value, N>& val) : Base{val} {}
@@ -272,7 +286,7 @@ class Matrix {
     Vector<Vector<Value, N>, M> _val;
 
 public:
-    Matrix() = default;
+    constexpr Matrix() : _val{} {}
     constexpr Matrix(const std::array<std::array<Value, N>, M>& val)
         : _val{val} {}
     constexpr Matrix(std::array<std::array<Value, N>, M>&& val)
@@ -368,7 +382,7 @@ public:
     }
     template <typename RHSValue>
     constexpr Matrix& operator*=(const Matrix<RHSValue, N, N>& rhs) {
-        swap(*this._val, (*this * rhs)._val);
+        swap((*this)._val, (*this * rhs)._val);
         return *this;
     }
 

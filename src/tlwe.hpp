@@ -11,7 +11,7 @@ namespace TFHE {
 
 struct TLWEParameter128BitSecurity {
     constexpr static int N = 636;
-    constexpr static int ALPHA = 0.0000925119974676756;
+    constexpr static double ALPHA = 0.0000925119974676756;
 };
 
 template <typename TLWEParameter = TLWEParameter128BitSecurity>
@@ -53,18 +53,26 @@ public:
 
     Vector<bool, N> generate_s() { return random.bit_vector<N>(); }
 
-    Vector<TorusValue, N + 1> encrypt_single_binary(
-        bool m, const Vector<bool, N>& s) {
+    Vector<TorusValue, N + 1> encrypt(
+        const TorusValue& m, const Vector<bool, N>& s) {
         Vector<TorusValue, N> a = generate_a();
         TorusValue e = generate_e();
-        TorusValue b = a.dot(s) + TorusValue(m) + e;
+        TorusValue b = a.dot(s) + m + e;
         return concat_ba(b, a);
     }
+    Vector<TorusValue, N + 1> encrypt_single_binary(
+        bool m, const Vector<bool, N>& s) {
+        return encrypt(TorusValue(m), s);
+    }
 
-    bool decrypt_single_binary(
+    TorusValue decrypt(
         const Vector<TorusValue, N + 1>& ba, const Vector<bool, N>& s) {
         auto [b, a] = decompose_ba<N>(ba);
-        return (bool)(b - a.dot(s));
+        return (b - a.dot(s));
+    }
+    bool decrypt_single_binary(
+        const Vector<TorusValue, N + 1>& ba, const Vector<bool, N>& s) {
+        return (bool)decrypt(ba, s);
     }
 };
 }  // namespace TFHE

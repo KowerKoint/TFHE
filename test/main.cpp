@@ -56,10 +56,59 @@ void test_CMUX() {
     }
 }
 
+void test_Bootstrapping() {
+    TFHE::TLWE<> tlwe_lv0;
+    TFHE::TLWE<TFHE::TLWELv1ParameterDefault> tlwe_lv1;
+    TFHE::TRLWE<> trlwe;
+    constexpr int TLWE_N = TFHE::TLWE<>::N;
+    constexpr int N = TFHE::TRLWE<>::N;
+    constexpr int K = TFHE::TRLWE<>::K;
+    constexpr int L = TFHE::TRGSW<>::L;
+    TFHE::TRGSW<> trgsw(trlwe);
+    std::mt19937 mt(0);
+    std::uniform_real_distribution<> rd[2] = {
+        std::uniform_real_distribution<>{0.55, 0.95},
+        std::uniform_real_distribution<>{0.05, 0.45}};
+    for (int _ = 0; _ < 10; _++) {
+        // secrets
+        auto tlwe_lv0_s = tlwe_lv0.generate_s();
+        auto trlwe_s = trlwe.generate_s();
+        auto tlwe_lv1_s = trlwe.extract_tlwe_lv0_key(trlwe_s);
+        TFHE::Vector<TFHE::Matrix<TFHE::Polynomial<TFHE::TorusValue, N>,
+                         (K + 1) * L, K + 1>,
+            TLWE_N>
+            bk;
+        for (int i = 0; i < TLWE_N; i++) {
+            TFHE::Polynomial<bool, N> tlwe_s_polynomial;
+            for (int j = 0; j < N; j++) assert(tlwe_s_polynomial[j] == 0);
+            tlwe_s_polynomial[0] = tlwe_lv0_s[i];
+            bk[i] = trgsw.encrypt_binary_polynomial(tlwe_s_polynomial, trlwe_s);
+        }
+
+        for (int i = 0; i < 10; i++) {
+            bool input = mt() & 1;
+            /*
+            TFHE::TorusValue m{
+                rd[input](mt)};  // true: [0.05,0.45), false: [0.55,0.95)
+            */
+            TFHE::TorusValue m(input);
+            auto lv0 = tlwe_lv0.encrypt(m, tlwe_lv0_s);
+            std::cout << "tlwelv0_key:\n";
+            for (int j = 0; j < TLWE_N; j++)
+                std::cout << tlwe_lv0_s[j] << (j == TLWE_N - 1 ? '\n' : ' ');
+            auto lv1 = trgsw.gate_bootstrapping_tlwe_to_tlwe(lv0, bk);
+            std::cout << (double)m << ' '
+                      << tlwe_lv1.decrypt_single_binary(lv1, tlwe_lv1_s)
+                      << std::endl;
+        }
+    }
+}
+
 // TODO: Google Testとか使う
 // CMake Targetでテストできるようにしたい
 int main() {
     test_TLWE();
     test_TRLWE();
     test_CMUX();
+    test_Bootstrapping();
 }

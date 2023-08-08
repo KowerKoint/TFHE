@@ -13,12 +13,14 @@ template <typename TRGSWParameter = TRGSWParameterDefault,
     typename TRLWEParameter = TRLWEParameterDefault,
     std::enable_if_t<TRGSWParameter::K == TRLWEParameter::K>* = nullptr>
 class TRGSW {
+public:
     constexpr static int BG_BIT = TRGSWParameter::BG_BIT;
     constexpr static int N = TRLWEParameter::N;
     constexpr static int K = TRGSWParameter::K;
     constexpr static int L = TRGSWParameter::L;
     using Int = SignedInt<BG_BIT>;
 
+private:
     TRLWE<TRLWEParameter>& trlwe;
 
     Vector<Polynomial<Int, N>, L> decomposition(
@@ -104,6 +106,77 @@ public:
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_0,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_1) {
         return external_product(c, ba_1 - ba_0) + ba_0;
+    }
+
+    template <int TLWE_N>
+    Vector<Polynomial<TorusValue, N>, K + 1> blind_rotate(
+        const Vector<TorusValue, TLWE_N + 1>& tlwe_lv0,
+        const Vector<Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>,
+            TLWE_N>& bk,
+        const Vector<Polynomial<TorusValue, N>, K + 1>& test_vector) {
+        auto get_log_2 = [](int n) {
+            int n_bit = 0;
+            while ((1 << n_bit) < n) n_bit++;
+            return n_bit;
+        };
+        constexpr int N_bit = get_log_2(N);
+        static_assert((1 << N_bit) == N);  // N = 2^N_bit
+
+        std::cout << "===Blind Rotate start===\n";
+        std::cout << "test_vector:\n";
+        for (int i = 0; i < K + 1; i++) {
+            for (int j = 0; j < N; j++) {
+                std::cout << (double)test_vector[i][j]
+                          << (j == N - 1 ? ' ' : '\n');
+            }
+        }
+        auto trlwe_multiply_x_exp =
+            [](const Vector<Polynomial<TorusValue, N>, K + 1>& trlwe, int n) {
+                // trlweにX^nを乗算
+                Vector<Polynomial<TorusValue, N>, K + 1> ret;
+                std::transform(trlwe.begin(), trlwe.end(), ret.begin(),
+                    [&](const Polynomial<TorusValue, N>& p) {
+                        return p.multiply_x_exp(n);
+                    });
+                return ret;
+            };
+        int b_2n = tlwe_lv0[0].get_raw_value() >>
+                   (32 - (N_bit + 1));  // floor(b * 2N);
+        Vector<Polynomial<TorusValue, N>, K + 1> ret =
+            trlwe_multiply_x_exp(test_vector, -b_2n);
+        for (int i = 0; i < TLWE_N; i++) {
+            int a_2n = (tlwe_lv0[1 + i].get_raw_value() +
+                           (1 << (32 - (N_bit + 1) - 1))) >>
+                       (32 - (N_bit + 1));  // round(a_i * 2N)
+            Vector<Polynomial<TorusValue, N>, K + 1> rotated =
+                trlwe_multiply_x_exp(ret, a_2n);
+            ret = cmux(bk[i], ret, rotated);  // s==1のときret←ret*x^(a_2n)
+        }
+        std::cout << "ret:\n";
+        for (int i = 0; i < K + 1; i++) {
+            for (int j = 0; j < N; j++) {
+                std::cout << (double)ret[i][j] << (j == N - 1 ? ' ' : '\n');
+            }
+        }
+        return ret;
+    }
+
+    template <int TLWE_N>
+    Vector<TorusValue, N * K + 1> gate_bootstrapping_tlwe_to_tlwe(
+        const Vector<TorusValue, TLWE_N + 1>& tlwe_lv0,
+        const Vector<Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>,
+            TLWE_N>& bk) {
+        auto gen_test_vector = []() {
+            Vector<Polynomial<TorusValue, N>, K + 1> ret;
+            for (int i = 0; i < N; i++) {
+                ret[0][i] = TorusValue(true);
+            }
+            return ret;
+        };
+        constexpr Vector<Polynomial<TorusValue, N>, K + 1> test_vector =
+            gen_test_vector();
+        return trlwe.sample_extract_index(
+            blind_rotate(tlwe_lv0, bk, test_vector), 0);
     }
 };
 }  // namespace TFHE

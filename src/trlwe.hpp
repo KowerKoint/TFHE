@@ -12,6 +12,11 @@ struct TRLWEParameterDefault {
     constexpr static int K = 2;
     constexpr static double ALPHA = 2.9802322387695312e-08;  // 2^(-25)
 };
+struct TLWELv1ParameterDefault {
+    constexpr static int N =
+        TRLWEParameterDefault::N * TRLWEParameterDefault::K;
+    constexpr static double ALPHA = 2.9802322387695312e-08;  // 2^(-25)
+};
 
 template <typename TRLWEParameter = TRLWEParameterDefault>
 class TRLWE {
@@ -76,7 +81,6 @@ public:
         auto a = generate_a();
         auto e = generate_e();
         auto b = a.dot(s) + m_torus + e;
-        auto tmp = b - a.dot(s);
         return concat_ba(b, a);
     }
 
@@ -95,7 +99,7 @@ public:
     Vector<TorusValue, N * K + 1> sample_extract_index(
         const Vector<Polynomial<TorusValue, N>, K + 1>& trlwe_ba, int x) const {
         Vector<TorusValue, N * K + 1> tlwe_lv1_ba;
-        tlwe_lv1_ba[0] = trlwe_ba[0][1];
+        tlwe_lv1_ba[0] = trlwe_ba[0][x];
         for (int j = 0; j < K; j++) {
             for (int i = 0; i <= x; i++) {
                 tlwe_lv1_ba[1 + j * N + i] = trlwe_ba[1 + j][x - i];
@@ -105,6 +109,15 @@ public:
             }
         }
         return tlwe_lv1_ba;
+    }
+
+    Vector<bool, N * K> extract_tlwe_lv0_key(
+        const Vector<Polynomial<bool, N>, K>& s) {
+        Vector<bool, N * K> ret;
+        for (int i = 0; i < K; i++) {
+            std::copy(s[i].begin(), s[i].end(), ret.begin() + i * N);
+        }
+        return ret;
     }
 };
 }  // namespace TFHE
