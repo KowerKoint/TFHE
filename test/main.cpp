@@ -1,7 +1,10 @@
 #include <cassert>
+#include <iostream>
 #include <random>
 
+#include "hom_nand.hpp"
 #include "tlwe.hpp"
+#include "tlwe_key_switching.hpp"
 #include "trgsw.hpp"
 #include "trlwe.hpp"
 #include "types.hpp"
@@ -143,13 +146,85 @@ void test_Bootstrapping() {
     }
 }
 
+void test_KeySwitching() {
+    TFHE::TLWE<> tlwe_lv0;
+    TFHE::TLWE<TFHE::TLWELv1ParameterDefault> tlwe_lv1;
+    TFHE::TRLWE<> trlwe;
+    constexpr int TLWE_N = TFHE::TLWE<>::N;
+    constexpr int N = TFHE::TRLWE<>::N;
+    constexpr int K = TFHE::TRLWE<>::K;
+    constexpr int L = TFHE::TRGSW<>::L;
+    TFHE::TRGSW<> trgsw(trlwe);
+    TFHE::TLWEKeySwitching<decltype(tlwe_lv0), decltype(tlwe_lv1)>
+        key_switching{tlwe_lv0};
+    std::mt19937 mt(0);
+    std::uniform_real_distribution<> rd[2] = {
+        std::uniform_real_distribution<>{0.55, 0.95},
+        std::uniform_real_distribution<>{0.05, 0.45}};
+    for (int _ = 0; _ < 10; _++) {
+        // secrets
+        auto tlwe_lv0_s = tlwe_lv0.generate_s();
+        auto trlwe_s = trlwe.generate_s();
+        auto tlwe_lv1_s = trlwe.extract_tlwe_lv0_key(trlwe_s);
+        TFHE::Vector<TFHE::Matrix<TFHE::Polynomial<TFHE::TorusValue, N>,
+                         (K + 1) * L, K + 1>,
+            TLWE_N>
+            bk;
+        for (int i = 0; i < TLWE_N; i++) {
+            TFHE::Polynomial<bool, N> tlwe_s_polynomial;
+            tlwe_s_polynomial[0] = tlwe_lv0_s[i];
+            bk[i] = trgsw.encrypt_binary_polynomial(tlwe_s_polynomial, trlwe_s);
+        }
+        auto ks = key_switching.make_ks(tlwe_lv0_s, tlwe_lv1_s);
+
+        for (int i = 0; i < 10; i++) {
+            std::cout << "i=" << i << std::endl;
+            bool input = mt() & 1;
+            TFHE::TorusValue m{
+                rd[input](mt)};  // true: [0.05,0.45), false: [0.55,0.95)
+            auto lv0 = tlwe_lv0.encrypt(m, tlwe_lv0_s);
+            auto lv1 = trgsw.gate_bootstrapping_tlwe_to_tlwe(lv0, bk);
+            auto lv0_changed = key_switching.identity_key_switch(lv1, ks);
+            assert(input == tlwe_lv0.decrypt_single_binary(lv0, tlwe_lv0_s));
+        }
+    }
+}
+
+void test_HomNAND() {
+    TFHE::HomNAND hom_nand;
+    std::mt19937 mt;
+    for (int _ = 0; _ < 10; _++) {
+        auto secret_key = hom_nand.generate_secret_key();
+        auto evaluate_key = hom_nand.make_evaluate_key(secret_key);
+        bool a[10];
+        TFHE::HomNAND<>::Cipher ca[10];
+        for (int i = 0; i < 10; i++) {
+            a[i] = mt() & 1;
+            ca[i] = hom_nand.encrypt(a[i], secret_key);
+        }
+        for (int i = 50; i < 50; i++) {
+            int x = mt() & 10;
+            int y = mt() & 10;
+            int z = mt() & 10;
+            // a[z] <- a[x] nand a[y]
+            a[z] = !(a[x] && a[y]);
+            ca[z] = hom_nand.nand(ca[x], ca[y], evaluate_key);
+        }
+        for (int i = 0; i < 10; i++) {
+            assert(a[i] == hom_nand.decrypt(ca[i], secret_key));
+        }
+    }
+}
+
 // TODO: Google Testとか使う
 // CMake Targetでテストできるようにしたい
 int main() {
-    test_TLWE();
-    test_TRLWE();
+    /* test_TLWE(); */
+    /* test_TRLWE(); */
     /* test_ExternalProduct(); */
-    test_CMUX();
-    test_PolynomialXExp();
-    test_Bootstrapping();
+    /* test_CMUX(); */
+    /* test_PolynomialXExp(); */
+    /* test_Bootstrapping(); */
+    /* test_KeySwitching(); */
+    test_HomNAND();
 }

@@ -99,6 +99,13 @@ public:
         return encrypt_integer_polynomial(mu_integer, s);
     }
 
+    Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1> encrypt_single_binary(
+        bool m, const Vector<Polynomial<bool, N>, K>& s) {
+        Polynomial<Int, N> mu_integer;
+        if (m) mu_integer[0] = 1;
+        return encrypt_integer_polynomial(mu_integer, s);
+    }
+
     Vector<Polynomial<TorusValue, N>, K + 1> external_product(
         const Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>& c,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba) {
@@ -116,6 +123,18 @@ public:
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_0,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_1) {
         return external_product(c, ba_1 - ba_0) + ba_0;
+    }
+
+    template <int TLWE_N>
+    Vector<Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>, TLWE_N>
+    make_bk(const Vector<bool, TLWE_N>& tlwe_s,
+        const Vector<Polynomial<bool, N>, K>& trlwe_s) {
+        Vector<Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>, TLWE_N>
+            bk;
+        for (int i = 0; i < TLWE_N; i++) {
+            bk[i] = encrypt_single_binary(tlwe_s[i], trlwe_s);
+        }
+        return bk;
     }
 
     template <int TLWE_N>

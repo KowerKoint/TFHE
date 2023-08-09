@@ -1,8 +1,7 @@
 #pragma once
 
 #include <array>
-#include <bitset>
-#include <tuple>
+#include <utility>
 
 #include "random.hpp"
 #include "types.hpp"
