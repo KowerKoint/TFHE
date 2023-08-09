@@ -34,9 +34,8 @@ public:
         for (int i = 0; i < N_LV1; i++) {
             for (int m = 0; m < T; m++) {
                 for (int o = 1; o < (1 << BASE_BIT); o++) {
-                    TorusValue s_im = TorusValue::from_raw_value(
-                        (uint32_t)(((uint64_t)s_lv1[i] * o) >>
-                                   (BASE_BIT * (m + 1))));
+                    TorusValue s_im = TorusValue::from_raw_value((uint32_t)(
+                        ((uint64_t)s_lv1[i] * o) >> (BASE_BIT * (m + 1))));
                     ks[i][m][o] = tlwe_lv0.encrypt(s_im, s_lv0);
                 }
             }
