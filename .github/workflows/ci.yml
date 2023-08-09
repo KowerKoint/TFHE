@@ -26,9 +26,14 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+        
+      - name: Install clang
+        run: sudo apt install clang
 
       - name: Build test
-        run: g++ -std=gnu++17 test/main.cpp -I src/ -o test/main
+        run: clang++ -std=gnu++17 -O2 test/main.cpp -I src/ -o test/main
       
       - name: Run test
-        run: test/main
+        run: |
+          ulimit -s unlimited
+          test/main
