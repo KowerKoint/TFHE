@@ -59,22 +59,19 @@ void test_CMUX() {
 void test_PolynomialXExp() {
     std::mt19937 mt(0);
     for (int _ = 0; _ < 100; _++) {
-        std::cout << _ << std::endl;
         TFHE::Polynomial<int, 512> poly;
-        for (int i = 0; i < 512; i++) poly[i] = mt();
-        for (int i = 0; i < 512; i++) {
-            std::cout << ' ' << poly[i];
-        }
-        std::cout << std::endl;
+        for (int i = 0; i < 512; i++) poly[i] = mt() % 10000;
         int n = mt() % 1024;
         TFHE::Polynomial<int, 512> x_n;
         if (n >= 512) {
-            x_n[n] = -1;
+            x_n[n - 512] = -1;
             n -= 1024;
         } else {
             x_n[n] = 1;
         }
-        assert(poly * x_n == poly.multiply_x_exp(n));
+        auto lhs = poly * x_n;
+        auto rhs = poly.multiply_x_exp(n);
+        assert(lhs == rhs);
     }
 }
 
@@ -100,7 +97,6 @@ void test_Bootstrapping() {
                          (K + 1) * L, K + 1>,
             TLWE_N>
             bk;
-#pragma omp parallel for
         for (int i = 0; i < TLWE_N; i++) {
             TFHE::Polynomial<bool, N> tlwe_s_polynomial;
             tlwe_s_polynomial[0] = tlwe_lv0_s[i];
@@ -109,11 +105,8 @@ void test_Bootstrapping() {
 
         for (int i = 0; i < 10; i++) {
             bool input = mt() & 1;
-            /*
             TFHE::TorusValue m{
                 rd[input](mt)};  // true: [0.05,0.45), false: [0.55,0.95)
-            */
-            TFHE::TorusValue m(input);
             auto lv0 = tlwe_lv0.encrypt(m, tlwe_lv0_s);
             auto lv1 = trgsw.gate_bootstrapping_tlwe_to_tlwe(lv0, bk);
             std::cout << (double)m << ' '
@@ -123,23 +116,15 @@ void test_Bootstrapping() {
     }
 }
 
-void test_Tmp() {
-    TFHE::Vector<TFHE::Polynomial<TFHE::TorusValue, 2>, 2> p{
-        {TFHE::Polynomial<TFHE::TorusValue, 2>{
-             {TFHE::TorusValue(.1), TFHE::TorusValue(.2)}},
-            TFHE::Polynomial<TFHE::TorusValue, 2>{
-                {TFHE::TorusValue(.3), TFHE::TorusValue(.4)}}}};
-    p[0] += p[1];
-    std::cout << (double)p[0][0] << ' ' << (double)p[0][1] << '\n';
-}
+void test_Tmp() { constexpr TFHE::Vector<TFHE::Polynomial<int, 2>, 2> p; }
 
 // TODO: Google Testとか使う
 // CMake Targetでテストできるようにしたい
 int main() {
-    // test_TLWE();
-    // test_TRLWE();
-    // test_CMUX();
+    test_TLWE();
+    test_TRLWE();
+    test_CMUX();
+    test_PolynomialXExp();
     test_Bootstrapping();
-    // test_PolynomialXExp();
     // test_Tmp();
 }

@@ -110,25 +110,20 @@ public:
     constexpr _VectorOrPolynomial(std::array<Value, N>&& val)
         : _val{std::move(val)} {}
 
-    using Iterator = typename std::array<Value, N>::iterator;
-    using ConstIterator = typename std::array<Value, N>::const_iterator;
-    using ReverseIterator = typename std::array<Value, N>::reverse_iterator;
-    using ConstReverseIterator =
-        typename std::array<Value, N>::const_reverse_iterator;
-    constexpr Iterator begin() { return _val.begin(); }
-    constexpr ConstIterator begin() const { return _val.begin(); }
-    constexpr Iterator end() { return _val.end(); }
-    constexpr ConstIterator end() const { return _val.end(); }
-    constexpr ConstIterator cbegin() const { return _val.cbegin(); }
-    constexpr ConstIterator cend() const { return _val.cend(); }
-    constexpr Iterator rbegin() { return _val.rbegin(); }
-    constexpr ConstIterator rbegin() const { return _val.rbegin(); }
-    constexpr Iterator rend() { return _val.rend(); }
-    constexpr ConstIterator rend() const { return _val.rend(); }
-    constexpr ConstIterator crbegin() const { return _val.crbegin(); }
-    constexpr ConstIterator crend() const { return _val.crend(); }
+    constexpr auto begin() { return _val.begin(); }
+    constexpr auto begin() const { return _val.begin(); }
+    constexpr auto end() { return _val.end(); }
+    constexpr auto end() const { return _val.end(); }
+    constexpr auto cbegin() const { return _val.cbegin(); }
+    constexpr auto cend() const { return _val.cend(); }
+    constexpr auto rbegin() { return _val.rbegin(); }
+    constexpr auto rbegin() const { return _val.rbegin(); }
+    constexpr auto rend() { return _val.rend(); }
+    constexpr auto rend() const { return _val.rend(); }
+    constexpr auto crbegin() const { return _val.crbegin(); }
+    constexpr auto crend() const { return _val.crend(); }
 
-    constexpr Value operator[](int idx) const { return _val[idx]; }
+    constexpr const Value& operator[](int idx) const { return _val[idx]; }
     constexpr Value& operator[](int idx) { return _val[idx]; }
 
     constexpr VectorOrPolynomial operator+() const {
@@ -157,12 +152,12 @@ public:
     }
 
     constexpr bool operator==(const VectorOrPolynomial& rhs) const {
-        for (int i = 0; i < 0; i++)
+        for (int i = 0; i < N; i++)
             if (_val[i] != rhs[i]) return false;
         return true;
     }
     constexpr bool operator!=(const VectorOrPolynomial& rhs) const {
-        for (int i = 0; i < 0; i++)
+        for (int i = 0; i < N; i++)
             if (_val[i] != rhs[i]) return true;
         return false;
     }
@@ -184,14 +179,14 @@ public:
         this->_val = rhs._val;
         return *this;
     }
-    constexpr Polynomial& operator=(Polynomial&& rhs) {
+    Polynomial& operator=(Polynomial&& rhs) {
         if (this != &rhs) this->_val = std::move(rhs._val);
         return *this;
     }
 
     template <typename RHSValue>
     constexpr Polynomial& operator*=(const Polynomial<RHSValue, N>& rhs) {
-        std::array<Value, N> ret;
+        Polynomial<Value, N> ret;
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 if (i + j < N)
@@ -209,7 +204,7 @@ public:
     operator*(const Polynomial<RHSValue, N>& rhs) const {
         using Result =
             decltype(std::declval<Value>() * std::declval<RHSValue>());
-        std::array<Result, N> ret;
+        Polynomial<Result, N> ret;
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 if (i + j < N)
@@ -257,7 +252,7 @@ public:
         this->_val = rhs._val;
         return *this;
     }
-    constexpr Vector& operator=(Vector&& rhs) {
+    Vector& operator=(Vector&& rhs) {
         if (this != &rhs) this->_val = std::move(rhs._val);
         return *this;
     }
@@ -300,7 +295,7 @@ public:
         this->_val = rhs._val;
         return *this;
     }
-    constexpr Matrix& operator=(Matrix&& rhs) {
+    Matrix& operator=(Matrix&& rhs) {
         if (this != &rhs) this->_val = std::move(rhs._val);
         return *this;
     }
@@ -325,7 +320,9 @@ public:
     constexpr ConstIterator crbegin() const { return _val.crbegin(); }
     constexpr ConstIterator crend() const { return _val.crend(); }
 
-    constexpr Vector<Value, N> operator[](int idx) const { return _val[idx]; }
+    constexpr const Vector<Value, N>& operator[](int idx) const {
+        return _val[idx];
+    }
     constexpr Vector<Value, N>& operator[](int idx) { return _val[idx]; }
 
     constexpr Matrix operator+() const { return Matrix(*this); }
