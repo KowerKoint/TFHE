@@ -30,6 +30,35 @@ void test_TRLWE() {
     }
 }
 
+void test_ExternalProduct() {
+    TFHE::TRLWE<> trlwe;
+    constexpr int N = TFHE::TRLWE<>::N;
+    constexpr int K = TFHE::TRLWE<>::K;
+    TFHE::TRGSW<> trgsw(trlwe);
+    std::mt19937 mt(0);
+    TFHE::Polynomial<bool, N> msg;
+    for (int i = 0; i < N; i++) msg[i] = true;
+    auto s = trlwe.generate_s();
+    auto ba = trlwe.encrypt_binary_polynomial(msg, s);
+    TFHE::Polynomial<int8_t, 512> one;
+    one[0] = 1;
+    auto c = trgsw.encrypt_integer_polynomial(one, s);
+    auto e = trgsw.external_product(c, ba);
+    for (int i = 0; i < K + 1; i++) {
+        for (int j = 0; j < N; j++) {
+            std::cout << ' ' << (double)ba[i][j];
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "=====\n";
+    for (int i = 0; i < K + 1; i++) {
+        for (int j = 0; j < N; j++) {
+            std::cout << ' ' << (double)e[i][j];
+        }
+        std::cout << std::endl;
+    }
+}
+
 void test_CMUX() {
     TFHE::TRLWE<> trlwe;
     constexpr int N = TFHE::TRLWE<>::N;
@@ -88,7 +117,7 @@ void test_Bootstrapping() {
     std::uniform_real_distribution<> rd[2] = {
         std::uniform_real_distribution<>{0.55, 0.95},
         std::uniform_real_distribution<>{0.05, 0.45}};
-    for (int _ = 0; _ < 1; _++) {
+    for (int _ = 0; _ < 10; _++) {
         // secrets
         auto tlwe_lv0_s = tlwe_lv0.generate_s();
         auto trlwe_s = trlwe.generate_s();
@@ -109,22 +138,18 @@ void test_Bootstrapping() {
                 rd[input](mt)};  // true: [0.05,0.45), false: [0.55,0.95)
             auto lv0 = tlwe_lv0.encrypt(m, tlwe_lv0_s);
             auto lv1 = trgsw.gate_bootstrapping_tlwe_to_tlwe(lv0, bk);
-            std::cout << (double)m << ' '
-                      << tlwe_lv1.decrypt_single_binary(lv1, tlwe_lv1_s)
-                      << std::endl;
+            assert(input == tlwe_lv1.decrypt_single_binary(lv1, tlwe_lv1_s));
         }
     }
 }
-
-void test_Tmp() { constexpr TFHE::Vector<TFHE::Polynomial<int, 2>, 2> p; }
 
 // TODO: Google Testとか使う
 // CMake Targetでテストできるようにしたい
 int main() {
     test_TLWE();
     test_TRLWE();
+    /* test_ExternalProduct(); */
     test_CMUX();
     test_PolynomialXExp();
     test_Bootstrapping();
-    // test_Tmp();
 }

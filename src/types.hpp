@@ -64,29 +64,21 @@ public:
         return TorusValue(*this) -= rhs;
     }
 
-    constexpr TorusValue& operator*=(bool rhs) {
-        if (!rhs) _val = 0U;
-        return *this;
-    }
-    template <int Bits, std::enable_if_t<!is_valid_int_bits_v<Bits>>* = nullptr>
-    constexpr TorusValue& operator*=(SignedInt<Bits> rhs) {
+    template <typename Scalar,
+        std::enable_if_t<std::is_scalar_v<Scalar>>* = nullptr>
+    constexpr TorusValue& operator*=(Scalar rhs) {
         _val *= rhs;
         return *this;
     }
-    constexpr TorusValue operator*(bool rhs) const {
-        return TorusValue(*this) *= rhs;
-    }
-    template <int Bits, std::enable_if_t<!is_valid_int_bits_v<Bits>>* = nullptr>
-    constexpr TorusValue operator*(SignedInt<Bits> rhs) {
+    template <typename Scalar,
+        std::enable_if_t<std::is_scalar_v<Scalar>>* = nullptr>
+    constexpr TorusValue operator*(Scalar rhs) const {
         return TorusValue(*this) *= rhs;
     }
 
-    friend constexpr TorusValue operator*(bool lhs, const TorusValue& rhs) {
-        return TorusValue::from_raw_value(lhs ? rhs._val : 0U);
-    }
-    template <int Bits, std::enable_if_t<!is_valid_int_bits_v<Bits>>* = nullptr>
-    friend constexpr TorusValue operator*(
-        SignedInt<Bits> lhs, const TorusValue& rhs) {
+    template <typename Scalar,
+        std::enable_if_t<std::is_scalar_v<Scalar>>* = nullptr>
+    friend constexpr TorusValue operator*(Scalar lhs, const TorusValue& rhs) {
         return TorusValue::from_raw_value(rhs._val * lhs);
     }
 

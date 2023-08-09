@@ -60,7 +60,8 @@ private:
 
     Vector<Polynomial<TorusValue, N>, K + 1> encrypt_zero_by_trlwe(
         const Vector<Polynomial<bool, N>, K>& s) {
-        return trlwe.encrypt_binary_polynomial({}, s);
+        constexpr Polynomial<TorusValue, N> zero_polynomial;
+        return trlwe.encrypt(zero_polynomial, s);
     }
 
 public:
@@ -114,15 +115,7 @@ public:
         const Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>& c,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_0,
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba_1) {
-        Vector<Polynomial<TorusValue, N>, K + 1> ret =
-            external_product(c, ba_1 - ba_0) + ba_0;
-        /* for (int i = 0; i < K + 1; i++) { */
-        /*     for (int j = 0; j < N; j++) { */
-        /*         std::cout << ' ' << (double)ret[i][j]; */
-        /*     } */
-        /*     std::cout << std::endl; */
-        /* } */
-        return ret;
+        return external_product(c, ba_1 - ba_0) + ba_0;
     }
 
     template <int TLWE_N>
@@ -163,12 +156,6 @@ public:
                 cmux(bk[i], ret, rotated);  // s==1のときret←ret*x^(a_2n)
             ret = selected;
         }
-        /* for (int i = 0; i < K + 1; i++) { */
-        /*     for (int j = 0; j < N; j++) { */
-        /*         std::cout << ' ' << (double)ret[i][j]; */
-        /*     } */
-        /*     std::cout << std::endl; */
-        /* } */
         return ret;
     }
 

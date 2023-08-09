@@ -73,27 +73,38 @@ public:
         return s;
     }
 
+    Vector<Polynomial<TorusValue, N>, K + 1> encrypt(
+        const Polynomial<TorusValue, N>& m,
+        const Vector<Polynomial<bool, N>, K>& s) {
+        auto a = generate_a();
+        auto e = generate_e();
+        auto b = a.dot(s) + m + e;
+        return concat_ba(b, a);
+    }
     Vector<Polynomial<TorusValue, N>, K + 1> encrypt_binary_polynomial(
         const Polynomial<bool, N>& m, const Vector<Polynomial<bool, N>, K>& s) {
         Polynomial<TorusValue, N> m_torus;
         std::transform(m.begin(), m.end(), m_torus.begin(),
             [](bool b) { return TorusValue(b); });
-        auto a = generate_a();
-        auto e = generate_e();
-        auto b = a.dot(s) + m_torus + e;
-        return concat_ba(b, a);
+        return encrypt(m_torus, s);
+    }
+
+    Polynomial<TorusValue, N> decrypt(
+        const Vector<Polynomial<TorusValue, N>, K + 1>& ba,
+        const Vector<Polynomial<bool, N>, K>& s) const {
+        auto [b, a] = decompose_ba<N>(ba);
+        auto ret = b - a.dot(s);
+        return ret;
     }
 
     Polynomial<bool, N> decrypt_binary_polynomial(
         const Vector<Polynomial<TorusValue, N>, K + 1>& ba,
         const Vector<Polynomial<bool, N>, K>& s) const {
-        auto [b, a] = decompose_ba<N>(ba);
-        auto tmp = b - a.dot(s);
-        auto torus_vector = b - a.dot(s);
-        Polynomial<bool, N> ans;
-        std::transform(torus_vector.begin(), torus_vector.end(), ans.begin(),
-            [](const TorusValue& val) { return (bool)val; });
-        return ans;
+        Polynomial<TorusValue, N> decrypted_torus = decrypt(ba, s);
+        Polynomial<bool, N> ret;
+        std::transform(decrypted_torus.begin(), decrypted_torus.end(),
+            ret.begin(), [](TorusValue val) { return (bool)val; });
+        return ret;
     }
 
     Vector<TorusValue, N * K + 1> sample_extract_index(
