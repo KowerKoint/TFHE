@@ -385,34 +385,11 @@ public:
     operator*(const Vector<LHSValue, M>& lhs, const Matrix<Value, M, N>& rhs) {
         using Result =
             decltype(std::declval<LHSValue>() * std::declval<Value>());
-        const Vector<Result, N> ret;
-        std::cout << "=====\n";
+        Vector<Result, N> ret;
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < N; j++) {
-                std::cout << "-----\n";
-                for (int k = 0; k < 512; k++) {
-                    std::cout << ' ' << (double)ret[j][k];
-                }
-                std::cout << "\n+\n";
-                auto tmp = lhs[i] * rhs[i][j];
-                for (int k = 0; k < 512; k++) {
-                    std::cout << ' ' << (double)tmp[k];
-                }
-                std::cout << "\n=\n";
-                ret[j] = ret[j] + tmp;  // auto tmp2 = ret[j] + tmp; ret[j] =
-                                        // tmp2; にすると何故か通る
-                for (int k = 0; k < 512; k++) {
-                    std::cout << ' ' << (double)ret[j][k];
-                }
-                std::cout << std::endl;
+                ret[j] += lhs[i] * rhs[i][j];
             }
-        }
-        std::cout << "*****\n";
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < 512; j++) {
-                std::cout << ' ' << (double)ret[i][j];
-            }
-            std::cout << std::endl;
         }
         return ret;
     }

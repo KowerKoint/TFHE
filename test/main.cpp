@@ -123,6 +123,16 @@ void test_Bootstrapping() {
     }
 }
 
+void test_Tmp() {
+    TFHE::Vector<TFHE::Polynomial<TFHE::TorusValue, 2>, 2> p{
+        {TFHE::Polynomial<TFHE::TorusValue, 2>{
+             {TFHE::TorusValue(.1), TFHE::TorusValue(.2)}},
+            TFHE::Polynomial<TFHE::TorusValue, 2>{
+                {TFHE::TorusValue(.3), TFHE::TorusValue(.4)}}}};
+    p[0] += p[1];
+    std::cout << (double)p[0][0] << ' ' << (double)p[0][1] << '\n';
+}
+
 // TODO: Google Testとか使う
 // CMake Targetでテストできるようにしたい
 int main() {
@@ -131,4 +141,5 @@ int main() {
     // test_CMUX();
     test_Bootstrapping();
     // test_PolynomialXExp();
+    // test_Tmp();
 }
