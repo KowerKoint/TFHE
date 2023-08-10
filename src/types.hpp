@@ -373,10 +373,6 @@ public:
     constexpr Matrix() : _val{} {}
     constexpr Matrix(const Matrix& v) : _val{v._val} {}
     constexpr Matrix(Matrix&& v) : _val{std::move(v._val)} {}
-    constexpr Matrix(const std::array<std::array<Value, N>, M>& val)
-        : _val{val} {}
-    constexpr Matrix(std::array<std::array<Value, N>, M>&& val)
-        : _val{std::move(val)} {}
 
     constexpr Matrix& operator=(const Matrix& rhs) {
         this->_val = rhs._val;
@@ -387,25 +383,10 @@ public:
         return *this;
     }
 
-    using Iterator = typename std::array<std::array<Value, N>, M>::iterator;
-    using ConstIterator =
-        typename std::array<std::array<Value, N>, M>::const_iterator;
-    using ReverseIterator =
-        typename std::array<std::array<Value, N>, M>::reverse_iterator;
-    using ConstReverseIterator =
-        typename std::array<std::array<Value, N>, M>::const_reverse_iterator;
-    constexpr Iterator begin() { return _val.begin(); }
-    constexpr ConstIterator begin() const { return _val.begin(); }
-    constexpr Iterator end() { return _val.end(); }
-    constexpr ConstIterator end() const { return _val.end(); }
-    constexpr ConstIterator cbegin() const { return _val.cbegin(); }
-    constexpr ConstIterator cend() const { return _val.cend(); }
-    constexpr Iterator rbegin() { return _val.rbegin(); }
-    constexpr ConstIterator rbegin() const { return _val.rbegin(); }
-    constexpr Iterator rend() { return _val.rend(); }
-    constexpr ConstIterator rend() const { return _val.rend(); }
-    constexpr ConstIterator crbegin() const { return _val.crbegin(); }
-    constexpr ConstIterator crend() const { return _val.crend(); }
+    constexpr auto begin() { return _val.begin(); }
+    constexpr auto begin() const { return _val.begin(); }
+    constexpr auto end() { return _val.end(); }
+    constexpr auto end() const { return _val.end(); }
 
     constexpr const Vector<Value, N>& operator[](int idx) const {
         return _val[idx];
