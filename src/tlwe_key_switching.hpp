@@ -34,9 +34,10 @@ public:
         for (int i = 0; i < N_LV1; i++) {
             for (int m = 0; m < T; m++) {
                 for (int o = 1; o < (1 << BASE_BIT); o++) {
-                    TorusValue s_im = TorusValue::from_raw_value((uint32_t)(
-                        ((uint64_t)s_lv1[i] * o) >> (BASE_BIT * (m + 1))));
-                    ks[i][m][o] = tlwe_lv0.encrypt(s_im, s_lv0);
+                    TorusValue s_imo = TorusValue::from_raw_value(
+                        s_lv1[i] ? (uint32_t)o << (32 - (m + 1) * BASE_BIT)
+                                 : 0U);
+                    ks[i][m][o] = tlwe_lv0.encrypt(s_imo, s_lv0);
                 }
             }
         }
@@ -54,7 +55,7 @@ public:
         ba_lv0[0] = ba_lv1[0];
         for (int i = 0; i < N_LV1; i++) {
             for (int m = 0; m < T; m++) {
-                int o = (ba_lv1[i].get_raw_value() + round_offset) >>
+                int o = (ba_lv1[1 + i].get_raw_value() + round_offset) >>
                             (32 - (m + 1) * BASE_BIT) &
                         ((1 << BASE_BIT) - 1);
                 if (o) ba_lv0 -= ks[i][m][o];

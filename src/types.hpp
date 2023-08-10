@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <complex>
 #include <cstdint>
 #include <iterator>
 
@@ -155,6 +156,56 @@ public:
 };
 
 template <typename Value, int N>
+class Polynomial;
+
+template <int N>
+Polynomial<std::complex<double>, N> fft(
+    const Polynomial<std::complex<double>, N>& a,
+    const std::array<std::complex<double>, (size_t)N>& omega_pow) {
+    auto get_log_2 = [](int n) {
+        int n_bit = 0;
+        while ((1 << n_bit) < n) n_bit++;
+        return n_bit;
+    };
+    constexpr int N_BIT = get_log_2(N);
+    static_assert((1 << N_BIT) == N);
+
+    auto bit_rev = [&](int i) {
+        int ret = 0;
+        for (int j = 0; j < N_BIT; j++) {
+            if (i & (1 << j)) ret |= 1 << (N_BIT - j - 1);
+        }
+        return ret;
+    };
+
+    Polynomial<std::complex<double>, N> ret = a;
+    for (int i = 0; i < N_BIT; i++) {
+        Polynomial<std::complex<double>, N> nret;
+        for (int j = 0; j < 1 << i; j++) {
+            int rev = bit_rev(j << 1);
+            for (int k = 0; k < 1 << (N_BIT - i - 1); k++) {
+                std::complex<double> even = ret[(j << (N_BIT - i)) + k];
+                std::complex<double> odd =
+                    ret[(j << (N_BIT - i)) + k + (1 << (N_BIT - i - 1))];
+                odd *= omega_pow[rev];
+                nret[(j << (N_BIT - i)) + k] = even + odd;
+                nret[(j << (N_BIT - i)) + k + (1 << (N_BIT - i - 1))] =
+                    even - odd;
+            }
+        }
+        ret = std::move(nret);
+    }
+    {
+        Polynomial<std::complex<double>, N> nret;
+        for (int i = 0; i < N; i++) {
+            nret[bit_rev(i)] = ret[i];
+        }
+        ret = std::move(nret);
+    }
+    return ret;
+}
+
+template <typename Value, int N>
 class Polynomial : public _VectorOrPolynomial<Value, N, Polynomial<Value, N>> {
     using Base = _VectorOrPolynomial<Value, N, Polynomial>;
     friend Base;
@@ -176,35 +227,84 @@ public:
     }
 
     template <typename RHSValue>
-    constexpr Polynomial& operator*=(const Polynomial<RHSValue, N>& rhs) {
-        Polynomial<Value, N> ret;
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                if (i + j < N)
-                    ret[i + j] += (*this)[i] * rhs[j];
-                else
-                    ret[i + j - N] -= (*this)[i] * rhs[j];
-            }
-        }
-        this->_val.swap(ret);
-        return *this;
-    }
-    template <typename RHSValue>
     constexpr Polynomial<
         decltype(std::declval<Value>() * std::declval<RHSValue>()), N>
     operator*(const Polynomial<RHSValue, N>& rhs) const {
         using Result =
             decltype(std::declval<Value>() * std::declval<RHSValue>());
+        if constexpr (N < 32) {
+            Polynomial<Result, N> ret;
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    if (i + j < N)
+                        ret[i + j] += (*this)[i] * rhs[j];
+                    else
+                        ret[i + j - N] -= (*this)[i] * rhs[j];
+                }
+            }
+            return ret;
+        }
+        auto expanded_n = [](int n) {
+            int ret = 1;
+            while (ret < n) ret <<= 1;
+            return ret;
+        };
+        constexpr int M = expanded_n(N) >> 1;
+        Polynomial<std::complex<double>, M> lhs_c;
+        for (int i = 0; i < N; i++) {
+            if (i < M)
+                lhs_c[i].real((double)((*this)[i]));
+            else
+                lhs_c[i - M].imag((double)((*this)[i]));
+        }
+        Polynomial<std::complex<double>, M> rhs_c;
+        for (int i = 0; i < N; i++) {
+            if (i < M)
+                rhs_c[i].real((double)(rhs[i]));
+            else
+                rhs_c[i - M].imag((double)(rhs[i]));
+        }
+        std::complex<double> w = std::polar(1., M_PI / (M * 2));
+        std::complex<double> w_pow = 1.;
+        for (int i = 0; i < M; i++) {
+            lhs_c[i] *= w_pow;
+            rhs_c[i] *= w_pow;
+            w_pow *= w;
+        }
+
+        std::complex<double> omega = std::polar(1., -M_PI * 2 / M);
+        std::array<std::complex<double>, M> omega_pow;
+        omega_pow[0] = 1.;
+        for (int i = 0; i < M - 1; i++) omega_pow[i + 1] = omega_pow[i] * omega;
+
+        auto lhs_fft = fft(lhs_c, omega_pow);
+        auto rhs_fft = fft(rhs_c, omega_pow);
+        Polynomial<std::complex<double>, M> ret_fft;
+        for (int i = 0; i < M; i++) {
+            ret_fft[i] = lhs_fft[i] * rhs_fft[i];
+        }
+        std::reverse(omega_pow.begin() + 1, omega_pow.end());
+        auto ret_c = fft(ret_fft, omega_pow);
+        std::complex<double> w_inv = std::polar(1., -M_PI / (M * 2));
+        std::complex<double> w_inv_pow = 1.;
+        for (int i = 0; i < M; i++) {
+            ret_c[i] *= 1. / M;
+            ret_c[i] *= w_inv_pow;
+            w_inv_pow *= w_inv;
+        }
         Polynomial<Result, N> ret;
         for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                if (i + j < N)
-                    ret[i + j] += (*this)[i] * rhs[j];
-                else
-                    ret[i + j - N] -= (*this)[i] * rhs[j];
-            }
+            if (i < M)
+                ret[i] = (Result)ret_c[i].real();
+            else
+                ret[i] = (Result)ret_c[i - M].imag();
         }
         return ret;
+    }
+    template <typename RHSValue>
+    constexpr Polynomial& operator*=(const Polynomial<RHSValue, N>& rhs) {
+        swap((*this)._val, (*this * rhs)._val);
+        return *this;
     }
     constexpr Polynomial multiply_x_exp(int n) const {
         n %= N * 2;
