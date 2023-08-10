@@ -4,6 +4,7 @@
 #include <complex>
 #include <cstdint>
 #include <iterator>
+#include <memory>
 
 namespace TFHE {
 int p = 0;
@@ -93,27 +94,21 @@ public:
 template <typename Value, int N, typename VectorOrPolynomial>
 class _VectorOrPolynomial {
 protected:
-    std::array<Value, N> _val;
+    std::unique_ptr<Value[]> _val;
 
 public:
-    constexpr _VectorOrPolynomial() : _val{{}} {}
-    constexpr _VectorOrPolynomial(const std::array<Value, N>& val)
-        : _val{val} {}
-    constexpr _VectorOrPolynomial(std::array<Value, N>&& val)
+    constexpr _VectorOrPolynomial() : _val{std::make_unique<Value[]>(N)} {}
+    constexpr _VectorOrPolynomial(const std::unique_ptr<Value[]>& val)
+        : _val{std::make_unique<Value[]>(N)} {
+        std::copy(val.get(), val.get() + N, _val.get());
+    }
+    constexpr _VectorOrPolynomial(std::unique_ptr<Value[]>&& val)
         : _val{std::move(val)} {}
 
-    constexpr auto begin() { return _val.begin(); }
-    constexpr auto begin() const { return _val.begin(); }
-    constexpr auto end() { return _val.end(); }
-    constexpr auto end() const { return _val.end(); }
-    constexpr auto cbegin() const { return _val.cbegin(); }
-    constexpr auto cend() const { return _val.cend(); }
-    constexpr auto rbegin() { return _val.rbegin(); }
-    constexpr auto rbegin() const { return _val.rbegin(); }
-    constexpr auto rend() { return _val.rend(); }
-    constexpr auto rend() const { return _val.rend(); }
-    constexpr auto crbegin() const { return _val.crbegin(); }
-    constexpr auto crend() const { return _val.crend(); }
+    constexpr Value* begin() { return _val.get(); }
+    constexpr const Value* begin() const { return _val.get(); }
+    constexpr Value* end() { return _val.get() + N; }
+    constexpr const Value* end() const { return _val.get() + N; }
 
     constexpr const Value& operator[](int idx) const { return _val[idx]; }
     constexpr Value& operator[](int idx) { return _val[idx]; }
