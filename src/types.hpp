@@ -97,53 +97,49 @@ protected:
     std::unique_ptr<Value[]> _val;
 
 public:
-    constexpr _VectorOrPolynomial() : _val{std::make_unique<Value[]>(N)} {}
-    constexpr _VectorOrPolynomial(const std::unique_ptr<Value[]>& val)
+    _VectorOrPolynomial() : _val{std::make_unique<Value[]>(N)} {}
+    _VectorOrPolynomial(const std::unique_ptr<Value[]>& val)
         : _val{std::make_unique<Value[]>(N)} {
         std::copy(val.get(), val.get() + N, _val.get());
     }
-    constexpr _VectorOrPolynomial(std::unique_ptr<Value[]>&& val)
+    _VectorOrPolynomial(std::unique_ptr<Value[]>&& val)
         : _val{std::move(val)} {}
 
-    constexpr Value* begin() { return _val.get(); }
-    constexpr const Value* begin() const { return _val.get(); }
-    constexpr Value* end() { return _val.get() + N; }
-    constexpr const Value* end() const { return _val.get() + N; }
+    Value* begin() { return _val.get(); }
+    const Value* begin() const { return _val.get(); }
+    Value* end() { return _val.get() + N; }
+    const Value* end() const { return _val.get() + N; }
 
-    constexpr const Value& operator[](int idx) const { return _val[idx]; }
-    constexpr Value& operator[](int idx) { return _val[idx]; }
+    const Value& operator[](int idx) const { return _val[idx]; }
+    Value& operator[](int idx) { return _val[idx]; }
 
-    constexpr VectorOrPolynomial operator+() const {
-        return VectorOrPolynomial(*this);
-    }
-    constexpr VectorOrPolynomial operator-() const {
+    VectorOrPolynomial operator+() const { return VectorOrPolynomial(*this); }
+    VectorOrPolynomial operator-() const {
         VectorOrPolynomial ret(*this);
         for (int i = 0; i < N; i++) ret[i] = -_val[i];
         return ret;
     }
-    constexpr VectorOrPolynomial& operator+=(const VectorOrPolynomial& rhs) {
+    VectorOrPolynomial& operator+=(const VectorOrPolynomial& rhs) {
         for (int i = 0; i < N; i++) _val[i] += rhs[i];
         return *(static_cast<VectorOrPolynomial*>(this));
     }
-    constexpr VectorOrPolynomial operator+(
-        const VectorOrPolynomial& rhs) const {
+    VectorOrPolynomial operator+(const VectorOrPolynomial& rhs) const {
         return VectorOrPolynomial(_val) += rhs;
     }
-    constexpr VectorOrPolynomial& operator-=(const VectorOrPolynomial& rhs) {
+    VectorOrPolynomial& operator-=(const VectorOrPolynomial& rhs) {
         for (int i = 0; i < N; i++) _val[i] -= rhs[i];
         return *(static_cast<VectorOrPolynomial*>(this));
     }
-    constexpr VectorOrPolynomial operator-(
-        const VectorOrPolynomial& rhs) const {
+    VectorOrPolynomial operator-(const VectorOrPolynomial& rhs) const {
         return VectorOrPolynomial(_val) -= rhs;
     }
 
-    constexpr bool operator==(const VectorOrPolynomial& rhs) const {
+    bool operator==(const VectorOrPolynomial& rhs) const {
         for (int i = 0; i < N; i++)
             if (_val[i] != rhs[i]) return false;
         return true;
     }
-    constexpr bool operator!=(const VectorOrPolynomial& rhs) const {
+    bool operator!=(const VectorOrPolynomial& rhs) const {
         for (int i = 0; i < N; i++)
             if (_val[i] != rhs[i]) return true;
         return false;
@@ -206,14 +202,13 @@ class Polynomial : public _VectorOrPolynomial<Value, N, Polynomial<Value, N>> {
     friend Base;
 
 public:
-    constexpr Polynomial() : Base() {}
-    constexpr Polynomial(const Polynomial& p) : Base(p._val){};
-    constexpr Polynomial(Polynomial&& p) : Base(std::move(p._val)){};
-    constexpr Polynomial(const std::unique_ptr<Value[]>& val) : Base{val} {}
-    constexpr Polynomial(std::unique_ptr<Value[]>&& val)
-        : Base{std::move(val)} {}
+    Polynomial() : Base() {}
+    Polynomial(const Polynomial& p) : Base(p._val){};
+    Polynomial(Polynomial&& p) : Base(std::move(p._val)){};
+    Polynomial(const std::unique_ptr<Value[]>& val) : Base{val} {}
+    Polynomial(std::unique_ptr<Value[]>&& val) : Base{std::move(val)} {}
 
-    constexpr Polynomial& operator=(const Polynomial& rhs) {
+    Polynomial& operator=(const Polynomial& rhs) {
         std::copy(rhs.begin(), rhs.end(), this->begin());
         return *this;
     }
@@ -223,8 +218,7 @@ public:
     }
 
     template <typename RHSValue>
-    constexpr Polynomial<
-        decltype(std::declval<Value>() * std::declval<RHSValue>()), N>
+    Polynomial<decltype(std::declval<Value>() * std::declval<RHSValue>()), N>
     operator*(const Polynomial<RHSValue, N>& rhs) const {
         using Result =
             decltype(std::declval<Value>() * std::declval<RHSValue>());
@@ -298,11 +292,11 @@ public:
         return ret;
     }
     template <typename RHSValue>
-    constexpr Polynomial& operator*=(const Polynomial<RHSValue, N>& rhs) {
+    Polynomial& operator*=(const Polynomial<RHSValue, N>& rhs) {
         swap((*this)._val, (*this * rhs)._val);
         return *this;
     }
-    constexpr Polynomial multiply_x_exp(int n) const {
+    Polynomial multiply_x_exp(int n) const {
         n %= N * 2;
         if (n < 0) n += N * 2;
         Polynomial ret;
@@ -329,13 +323,13 @@ class Vector : public _VectorOrPolynomial<Value, N, Vector<Value, N>> {
     friend Matrix<Value, N, N>;
 
 public:
-    constexpr Vector() : Base{} {}
-    constexpr Vector(const Vector& v) : Base{v._val} {}
-    constexpr Vector(Vector&& v) : Base{std::move(v._val)} {}
-    constexpr Vector(const std::unique_ptr<Value[]>& val) : Base{val} {}
-    constexpr Vector(std::unique_ptr<Value[]>&& val) : Base{std::move(val)} {}
+    Vector() : Base{} {}
+    Vector(const Vector& v) : Base{v._val} {}
+    Vector(Vector&& v) : Base{std::move(v._val)} {}
+    Vector(const std::unique_ptr<Value[]>& val) : Base{val} {}
+    Vector(std::unique_ptr<Value[]>&& val) : Base{std::move(val)} {}
 
-    constexpr Vector& operator=(const Vector& rhs) {
+    Vector& operator=(const Vector& rhs) {
         std::copy(rhs.begin(), rhs.end(), this->begin());
         return *this;
     }
@@ -345,7 +339,7 @@ public:
     }
 
     template <typename RHSValue>
-    constexpr decltype(std::declval<Value>() * std::declval<RHSValue>()) dot(
+    decltype(std::declval<Value>() * std::declval<RHSValue>()) dot(
         const Vector<RHSValue, N>& rhs) const {
         using Result =
             decltype(std::declval<Value>() * std::declval<RHSValue>());
@@ -356,7 +350,7 @@ public:
         return ret;
     }
 
-    constexpr Vector operator*=(const Matrix<Value, N, N>& rhs) {
+    Vector operator*=(const Matrix<Value, N, N>& rhs) {
         *this = *this * rhs;
         return *this;
     }
@@ -370,11 +364,11 @@ class Matrix {
     Vector<Vector<Value, N>, M> _val;
 
 public:
-    constexpr Matrix() : _val{} {}
-    constexpr Matrix(const Matrix& v) : _val{v._val} {}
-    constexpr Matrix(Matrix&& v) : _val{std::move(v._val)} {}
+    Matrix() : _val{} {}
+    Matrix(const Matrix& v) : _val{v._val} {}
+    Matrix(Matrix&& v) : _val{std::move(v._val)} {}
 
-    constexpr Matrix& operator=(const Matrix& rhs) {
+    Matrix& operator=(const Matrix& rhs) {
         this->_val = rhs._val;
         return *this;
     }
@@ -383,40 +377,33 @@ public:
         return *this;
     }
 
-    constexpr auto begin() { return _val.begin(); }
-    constexpr auto begin() const { return _val.begin(); }
-    constexpr auto end() { return _val.end(); }
-    constexpr auto end() const { return _val.end(); }
+    auto begin() { return _val.begin(); }
+    auto begin() const { return _val.begin(); }
+    auto end() { return _val.end(); }
+    auto end() const { return _val.end(); }
 
-    constexpr const Vector<Value, N>& operator[](int idx) const {
-        return _val[idx];
-    }
-    constexpr Vector<Value, N>& operator[](int idx) { return _val[idx]; }
+    const Vector<Value, N>& operator[](int idx) const { return _val[idx]; }
+    Vector<Value, N>& operator[](int idx) { return _val[idx]; }
 
-    constexpr Matrix operator+() const { return Matrix(*this); }
-    constexpr Matrix operator-() const {
+    Matrix operator+() const { return Matrix(*this); }
+    Matrix operator-() const {
         Matrix ret(*this);
         ret._val = -ret._val;
         return ret;
     }
-    constexpr Matrix operator+=(const Matrix& rhs) {
+    Matrix operator+=(const Matrix& rhs) {
         _val += rhs._val;
         return *this;
     }
-    constexpr Matrix operator+(const Matrix& rhs) const {
-        return Matrix(*this) += rhs;
-    }
-    constexpr Matrix operator-=(const Matrix& rhs) {
+    Matrix operator+(const Matrix& rhs) const { return Matrix(*this) += rhs; }
+    Matrix operator-=(const Matrix& rhs) {
         _val -= rhs._val;
         return *this;
     }
-    constexpr Matrix operator-(const Matrix& rhs) const {
-        return Matrix(*this) -= rhs;
-    }
+    Matrix operator-(const Matrix& rhs) const { return Matrix(*this) -= rhs; }
 
     template <typename RHSValue, int O>
-    constexpr Matrix<decltype(std::declval<Value>() * std::declval<RHSValue>()),
-        M, O>
+    Matrix<decltype(std::declval<Value>() * std::declval<RHSValue>()), M, O>
     operator*(const Matrix<RHSValue, N, O>& rhs) const {
         using Result =
             decltype(std::declval<Value>() * std::declval<RHSValue>());
@@ -431,8 +418,7 @@ public:
         return ret;
     }
     template <typename RHSValue>
-    constexpr Vector<decltype(std::declval<Value>() * std::declval<RHSValue>()),
-        M>
+    Vector<decltype(std::declval<Value>() * std::declval<RHSValue>()), M>
     operator*(const Vector<RHSValue, N>& rhs) const {
         using Result =
             decltype(std::declval<Value>() * std::declval<RHSValue>());
@@ -445,8 +431,7 @@ public:
         return ret;
     }
     template <typename LHSValue>
-    friend constexpr Vector<
-        decltype(std::declval<LHSValue>() * std::declval<Value>()), N>
+    friend Vector<decltype(std::declval<LHSValue>() * std::declval<Value>()), N>
     operator*(const Vector<LHSValue, M>& lhs, const Matrix<Value, M, N>& rhs) {
         using Result =
             decltype(std::declval<LHSValue>() * std::declval<Value>());
@@ -459,16 +444,12 @@ public:
         return ret;
     }
     template <typename RHSValue>
-    constexpr Matrix& operator*=(const Matrix<RHSValue, N, N>& rhs) {
+    Matrix& operator*=(const Matrix<RHSValue, N, N>& rhs) {
         swap((*this)._val, (*this * rhs)._val);
         return *this;
     }
 
-    constexpr bool operator==(const Matrix& rhs) const {
-        return _val == rhs._val;
-    }
-    constexpr bool operator!=(const Matrix& rhs) const {
-        return _val != rhs._val;
-    }
+    bool operator==(const Matrix& rhs) const { return _val == rhs._val; }
+    bool operator!=(const Matrix& rhs) const { return _val != rhs._val; }
 };
 }  // namespace TFHE

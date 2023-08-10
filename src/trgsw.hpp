@@ -23,15 +23,6 @@ public:
 private:
     TRLWE<TRLWEParameter>& trlwe;
 
-    constexpr static Vector<Polynomial<TorusValue, N>, K + 1>
-    gen_test_vector() {
-        Vector<Polynomial<TorusValue, N>, K + 1> ret;
-        for (int i = 0; i < N; i++) {
-            ret[0][i] = TorusValue(true);
-        }
-        return ret;
-    }
-
     Vector<Polynomial<Int, N>, L> decomposition(
         const Polynomial<TorusValue, N>& a) {
         constexpr uint32_t round_offset =
@@ -60,7 +51,7 @@ private:
 
     Vector<Polynomial<TorusValue, N>, K + 1> encrypt_zero_by_trlwe(
         const Vector<Polynomial<bool, N>, K>& s) {
-        constexpr Polynomial<TorusValue, N> zero_polynomial;
+        Polynomial<TorusValue, N> zero_polynomial;
         return trlwe.encrypt(zero_polynomial, s);
     }
 
@@ -183,8 +174,9 @@ public:
         const Vector<TorusValue, TLWE_N + 1>& tlwe_lv0,
         const Vector<Matrix<Polynomial<TorusValue, N>, (K + 1) * L, K + 1>,
             TLWE_N>& bk) {
-        constexpr Vector<Polynomial<TorusValue, N>, K + 1> test_vector =
-            gen_test_vector();
+        Vector<Polynomial<TorusValue, N>, K + 1> test_vector;
+        std::fill(
+            test_vector[0].begin(), test_vector[0].end(), TorusValue(true));
         return trlwe.sample_extract_index(
             blind_rotate(tlwe_lv0, bk, test_vector), 0);
     }
