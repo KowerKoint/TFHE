@@ -209,11 +209,12 @@ public:
     constexpr Polynomial() : Base() {}
     constexpr Polynomial(const Polynomial& p) : Base(p._val){};
     constexpr Polynomial(Polynomial&& p) : Base(std::move(p._val)){};
-    constexpr Polynomial(const std::array<Value, N>& val) : Base{val} {}
-    constexpr Polynomial(std::array<Value, N>&& val) : Base{std::move(val)} {}
+    constexpr Polynomial(const std::unique_ptr<Value[]>& val) : Base{val} {}
+    constexpr Polynomial(std::unique_ptr<Value[]>&& val)
+        : Base{std::move(val)} {}
 
     constexpr Polynomial& operator=(const Polynomial& rhs) {
-        this->_val = rhs._val;
+        std::copy(rhs.begin(), rhs.end(), this->begin());
         return *this;
     }
     Polynomial& operator=(Polynomial&& rhs) {
@@ -331,11 +332,11 @@ public:
     constexpr Vector() : Base{} {}
     constexpr Vector(const Vector& v) : Base{v._val} {}
     constexpr Vector(Vector&& v) : Base{std::move(v._val)} {}
-    constexpr Vector(const std::array<Value, N>& val) : Base{val} {}
-    constexpr Vector(std::array<Value, N>&& val) : Base{std::move(val)} {}
+    constexpr Vector(const std::unique_ptr<Value[]>& val) : Base{val} {}
+    constexpr Vector(std::unique_ptr<Value[]>&& val) : Base{std::move(val)} {}
 
     constexpr Vector& operator=(const Vector& rhs) {
-        this->_val = rhs._val;
+        std::copy(rhs.begin(), rhs.end(), this->begin());
         return *this;
     }
     Vector& operator=(Vector&& rhs) {
